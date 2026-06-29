@@ -1,0 +1,107 @@
+{
+  "info": {
+    "name": "Garage API - TOOAUTO",
+    "description": "Collection pour l'API Garage (professionnels, établissements, usagers, vidanges, annonces, etc.)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://127.0.0.1:8001/api" },
+    { "key": "token", "value": "" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        { "name": "Register", "request": { "auth": { "type": "noauth" }, "method": "POST", "header": [{"key": "Accept", "value": "application/json"}, {"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n  \"nom\": \"Dupont\",\n  \"prenoms\": \"Jean\",\n  \"role\": \"01\",\n  \"mobile\": \"0700000000\",\n  \"email\": \"jean@example.com\",\n  \"password\": \"secret123\",\n  \"password_confirmation\": \"secret123\"\n}" }, "url": "{{base_url}}/auth/register" }},
+        { "name": "Login", "event": [{ "listen": "test", "script": { "exec": ["var json = pm.response.json();", "if (json.token) { pm.collectionVariables.set('token', json.token); }"], "type": "text/javascript" } }], "request": { "auth": { "type": "noauth" }, "method": "POST", "header": [{"key": "Accept", "value": "application/json"}, {"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n  \"mobile\": \"0758754662\",\n  \"password\": \"secret123\"\n}" }, "url": "{{base_url}}/auth/login" }},
+        { "name": "Me", "request": { "method": "GET", "header": [{"key": "Accept", "value": "application/json"}], "url": "{{base_url}}/auth/me" }},
+        { "name": "Update Profile", "request": { "method": "PUT", "header": [{"key": "Accept", "value": "application/json"}, {"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n  \"nom\": \"Dupont\",\n  \"prenoms\": \"Jean\",\n  \"email\": \"jean@example.com\"\n}" }, "url": "{{base_url}}/auth/me" }},
+        { "name": "Update Password", "request": { "method": "PUT", "header": [{"key": "Accept", "value": "application/json"}, {"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n  \"current_password\": \"secret123\",\n  \"password\": \"newsecret123\",\n  \"password_confirmation\": \"newsecret123\"\n}" }, "url": "{{base_url}}/auth/password" }},
+        { "name": "Logout", "request": { "method": "POST", "header": [{"key": "Accept", "value": "application/json"}], "url": "{{base_url}}/auth/logout" }},
+        { "name": "Refresh Token", "request": { "method": "POST", "header": [{"key": "Accept", "value": "application/json"}], "url": "{{base_url}}/auth/refresh", "description": "Rafraîchit le token JWT. Header Authorization Bearer requis. Réponse : message, token, token_type, expires_in (s), expires_at (ms)." }, "event": [{ "listen": "test", "script": { "exec": ["var json = pm.response.json();", "if (json.token) { pm.collectionVariables.set('token', json.token); }"], "type": "text/javascript" } }] },
+        { "name": "Villes", "request": { "auth": { "type": "noauth" }, "method": "GET", "header": [{"key": "Accept", "value": "application/json"}], "url": "{{base_url}}/auth/villes" }},
+        { "name": "Communes", "request": { "auth": { "type": "noauth" }, "method": "GET", "header": [{"key": "Accept", "value": "application/json"}], "url": "{{base_url}}/auth/communes" }},
+        { "name": "Types de prestation", "request": { "auth": { "type": "noauth" }, "method": "GET", "header": [{"key": "Accept", "value": "application/json"}], "url": "{{base_url}}/auth/type-de-prestations" }},
+        { "name": "Catégories de service", "request": { "auth": { "type": "noauth" }, "method": "GET", "header": [{"key": "Accept", "value": "application/json"}], "url": "{{base_url}}/auth/categorie-services" }}
+      ]
+    },
+    {
+      "name": "Établissements",
+      "item": [
+        { "name": "Mon établissement", "request": { "method": "GET", "header": [{"key": "Accept", "value": "application/json"}], "url": "{{base_url}}/etablissements" }},
+        { "name": "Créer / Mettre à jour (JSON)", "request": { "method": "POST", "header": [{"key": "Accept", "value": "application/json"}, {"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n  \"name\": \"ExcellenceAuto\",\n  \"indicatif\": \"225\",\n  \"mobile\": \"0758754662\",\n  \"email\": \"jo@example.com\",\n  \"description\": \"Garage automobile\",\n  \"adresse\": \"Rue principale\",\n  \"longitude\": \"-4.0\",\n  \"latitude\": \"5.3\",\n  \"pays_id\": 1,\n  \"ville_id\": 1,\n  \"commune_id\": 1,\n  \"type_etablissement_id\": 1,\n  \"categorie_service_id\": 13,\n  \"type_de_prestations\": [2, 3, 4]\n}" }, "url": "{{base_url}}/etablissements" }},
+        { "name": "Share localisations", "request": { "method": "GET", "header": [{"key": "Accept", "value": "application/json"}], "url": "{{base_url}}/etablissements/1/share-localisations" }}
+      ]
+    },
+    {
+      "name": "QR Codes",
+      "item": [
+        { "name": "Liste", "request": { "method": "GET", "header": [{"key": "Accept", "value": "application/json"}], "url": "{{base_url}}/qrcodes" }},
+        { "name": "Assigner (scan lavage)", "request": { "method": "POST", "header": [{"key": "Accept", "value": "application/json"}, {"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n  \"qrcode\": \"CODE123\",\n  \"matricule\": \"AB-1234-CD\"\n}" }, "url": "{{base_url}}/qrcodes/assign-scan-lavage" }}
+      ]
+    },
+    {
+      "name": "Vidanges",
+      "item": [
+        { "name": "Liste des alerts", "request": { "method": "GET", "header": [{"key": "Accept", "value": "application/json"}], "url": "{{base_url}}/vidanges" }},
+        { "name": "Créer une vidange", "request": { "method": "POST", "header": [{"key": "Accept", "value": "application/json"}, {"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n  \"vehicule_id\": 1,\n  \"date_debut\": \"2025-02-01\",\n  \"date_fin\": \"2025-08-01\",\n  \"kilometrage\": \"50000\",\n  \"autres\": null\n}" }, "url": "{{base_url}}/vidanges" }},
+        { "name": "Dernière vidange par matricule", "request": { "method": "GET", "header": [{"key": "Accept", "value": "application/json"}], "url": "{{base_url}}/vidanges/last-by-matricule?matricule=AB-1234-CD" }},
+        { "name": "Véhicule par matricule", "request": { "method": "GET", "header": [{"key": "Accept", "value": "application/json"}], "url": "{{base_url}}/vidanges/vehicule-by-matricule?matricule=AB-1234-CD" }}
+      ]
+    },
+    {
+      "name": "Usagers",
+      "item": [
+        { "name": "Marques", "request": { "method": "GET", "header": [{"key": "Accept", "value": "application/json"}], "url": "{{base_url}}/usagers/marques" }},
+        { "name": "Types de véhicule", "request": { "method": "GET", "header": [{"key": "Accept", "value": "application/json"}], "url": "{{base_url}}/usagers/type-de-vehicules" }},
+        { "name": "Types de carburant", "request": { "method": "GET", "header": [{"key": "Accept", "value": "application/json"}], "url": "{{base_url}}/usagers/type-de-carburants" }},
+        { "name": "Types d'alerte", "request": { "method": "GET", "header": [{"key": "Accept", "value": "application/json"}], "url": "{{base_url}}/usagers/type-alerts" }},
+        { "name": "Liste", "request": { "method": "GET", "header": [{"key": "Accept", "value": "application/json"}], "url": "{{base_url}}/usagers?per_page=15&page=1" }},
+        { "name": "Enregistrer usager + véhicule", "request": { "method": "POST", "header": [{"key": "Accept", "value": "application/json"}], "body": { "mode": "formdata", "formdata": [{ "key": "indicatif", "value": "225", "type": "text", "description": "Indicatif téléphonique" }, { "key": "nom", "value": "Martin", "type": "text" }, { "key": "prenoms", "value": "Paul", "type": "text" }, { "key": "mobile", "value": "0712345678", "type": "text", "description": "Mobile (unique)" }, { "key": "is_whatsapp", "value": "1", "type": "text" }, { "key": "matricule", "value": "AB-1234-CD", "type": "text", "description": "Matricule (unique)" }, { "key": "carte_grise", "value": "CI-123456789", "type": "text", "description": "Carte grise (unique)" }, { "key": "type_de_vehicule_id", "value": "1", "type": "text" }, { "key": "marque_id", "value": "1", "type": "text" }, { "key": "type_de_carburant_id", "value": "1", "type": "text" }, { "key": "couleur", "value": "Noir", "type": "text" }, { "key": "modele", "value": "Corolla 2020", "type": "text" }, { "key": "photos[]", "type": "file", "description": "Photos véhicule (4 max, optionnel)" }] }, "url": "{{base_url}}/usagers" }}
+      ]
+    },
+    {
+      "name": "Annonces",
+      "item": [
+        { "name": "Liste", "request": { "method": "GET", "header": [{"key": "Accept", "value": "application/json"}], "url": "{{base_url}}/annonces?per_page=15" }},
+        { "name": "Masquer", "request": { "method": "POST", "header": [{"key": "Accept", "value": "application/json"}, {"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n  \"annonce_id\": 1\n}" }, "url": "{{base_url}}/annonces/hide" }}
+      ]
+    },
+    {
+      "name": "Articles",
+      "item": [
+        { "name": "Liste", "request": { "method": "GET", "header": [{"key": "Accept", "value": "application/json"}], "url": "{{base_url}}/articles" }},
+        { "name": "Créer", "request": { "method": "POST", "header": [{"key": "Accept", "value": "application/json"}, {"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n  \"libelle\": \"Pièce moteur\",\n  \"description\": \"Description\",\n  \"image\": \"image.png\",\n  \"amount\": \"50000\"\n}" }, "url": "{{base_url}}/articles" }},
+        { "name": "Détail", "request": { "method": "GET", "header": [{"key": "Accept", "value": "application/json"}], "url": "{{base_url}}/articles/1" }},
+        { "name": "Modifier", "request": { "method": "PUT", "header": [{"key": "Accept", "value": "application/json"}, {"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n  \"libelle\": \"Pièce moteur (mise à jour)\",\n  \"description\": \"Nouvelle description\"\n}" }, "url": "{{base_url}}/articles/1" }},
+        { "name": "Supprimer", "request": { "method": "DELETE", "header": [{"key": "Accept", "value": "application/json"}], "url": "{{base_url}}/articles/1" }}
+      ]
+    },
+    {
+      "name": "Abonnements",
+      "item": [
+        { "name": "Historique", "request": { "method": "GET", "header": [{"key": "Accept", "value": "application/json"}], "url": "{{base_url}}/abonnements" }}
+      ]
+    },
+    {
+      "name": "Forfaits",
+      "item": [
+        { "name": "Liste", "request": { "method": "GET", "header": [{"key": "Accept", "value": "application/json"}], "url": "{{base_url}}/forfaits" }}
+      ]
+    },
+    {
+      "name": "Promotions",
+      "item": [
+        { "name": "Liste", "request": { "method": "GET", "header": [{"key": "Accept", "value": "application/json"}], "url": "{{base_url}}/promotions" }},
+        { "name": "Créer", "request": { "method": "POST", "header": [{"key": "Accept", "value": "application/json"}, {"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n  \"libelle\": \"-20% lavage\",\n  \"mobile\": \"0700000000\",\n  \"date_debut\": \"2025-02-01\",\n  \"date_fin\": \"2025-02-28\",\n  \"image\": \"promo.png\",\n  \"statut\": 1,\n  \"description\": \"Promotion spéciale\"\n}" }, "url": "{{base_url}}/promotions" }},
+        { "name": "Détail", "request": { "method": "GET", "header": [{"key": "Accept", "value": "application/json"}], "url": "{{base_url}}/promotions/1" }},
+        { "name": "Modifier", "request": { "method": "PUT", "header": [{"key": "Accept", "value": "application/json"}, {"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n  \"libelle\": \"-30% lavage\",\n  \"statut\": 1\n}" }, "url": "{{base_url}}/promotions/1" }},
+        { "name": "Supprimer", "request": { "method": "DELETE", "header": [{"key": "Accept", "value": "application/json"}], "url": "{{base_url}}/promotions/1" }}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1522 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "API Garage - Authentification JWT",
+    "description": "API d'authentification pour les professionnels (JWT)",
+    "version": "1.0.0",
+    "contact": {
+      "name": "TOOAUTO Garage"
+    }
+  },
+  "basePath": "/api",
+  "schemes": ["http", "https"],
+  "consumes": ["application/json"],
+  "produces": ["application/json"],
+  "securityDefinitions": {
+    "bearerAuth": {
+      "type": "apiKey",
+      "in": "header",
+      "name": "Authorization",
+      "description": "Token JWT (format: Bearer {token})"
+    }
+  },
+  "security": [],
+  "tags": [
+    {
+      "name": "Auth",
+      "description": "Authentification JWT des professionnels"
+    },
+    {
+      "name": "Etablissements",
+      "description": "Gestion des établissements"
+    },
+    {
+      "name": "QR Codes",
+      "description": "Attribution et historique des QR codes"
+    },
+    {
+      "name": "Usagers",
+      "description": "Gestion des usagers par établissement"
+    },
+    {
+      "name": "Annonces",
+      "description": "Annonces des usagers (visibles par établissement)"
+    },
+    {
+      "name": "Articles",
+      "description": "Gestion des articles par établissement"
+    },
+    {
+      "name": "Promotions",
+      "description": "Gestion des promotions par établissement"
+    },
+    {
+      "name": "Abonnements",
+      "description": "Historique des abonnements pro par établissement"
+    },
+    {
+      "name": "Forfaits",
+      "description": "Liste des forfaits pro disponibles"
+    },
+    {
+      "name": "Vidanges",
+      "description": "Alerts vidanges et véhicules par matricule"
+    }
+  ],
+  "paths": {
+    "/auth/register": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Inscription",
+        "description": "Créer un nouveau compte professionnel",
+        "operationId": "register",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": ["nom", "prenoms", "role", "mobile", "password", "password_confirmation"],
+              "properties": {
+                "nom": { "type": "string", "example": "Dupont" },
+                "prenoms": { "type": "string", "example": "Jean" },
+                "role": { "type": "string", "example": "01" },
+                "mobile": { "type": "string", "example": "0700000000" },
+                "email": { "type": "string", "example": "jean@example.com" },
+                "password": { "type": "string", "format": "password", "example": "secret123" },
+                "password_confirmation": { "type": "string", "format": "password", "example": "secret123" }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Inscription réussie",
+            "schema": {
+              "$ref": "#/definitions/AuthResponse"
+            }
+          },
+          "422": {
+            "description": "Erreur de validation"
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Connexion",
+        "description": "Authentification par mobile et mot de passe",
+        "operationId": "login",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": ["mobile", "password"],
+              "properties": {
+                "mobile": { "type": "string", "example": "0596770207" },
+                "password": { "type": "string", "format": "password", "example": "secret123" }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Connexion réussie",
+            "schema": {
+              "$ref": "#/definitions/AuthResponse"
+            }
+          },
+          "422": {
+            "description": "Identifiants incorrects"
+          }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Profil",
+        "description": "Récupérer les informations du professionnel connecté",
+        "operationId": "me",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Profil du professionnel",
+            "schema": {
+              "$ref": "#/definitions/Professionnel"
+            }
+          },
+          "401": {
+            "description": "Non authentifié"
+          }
+        }
+      },
+      "put": {
+        "tags": ["Auth"],
+        "summary": "Mettre à jour le profil",
+        "description": "Modifier nom, prenoms et email uniquement",
+        "operationId": "updateProfile",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "nom": { "type": "string", "example": "Jo" },
+                "prenoms": { "type": "string", "example": "Cooper" },
+                "email": { "type": "string", "example": "cooper@gmail.com" }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Profil mis à jour",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": { "type": "string" },
+                "professionnel": { "$ref": "#/definitions/Professionnel" }
+              }
+            }
+          },
+          "401": { "description": "Non authentifié" },
+          "422": { "description": "Erreur de validation" }
+        }
+      },
+      "patch": {
+        "tags": ["Auth"],
+        "summary": "Mettre à jour le profil",
+        "description": "Modifier nom, prenoms et email uniquement",
+        "operationId": "updateProfilePatch",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "nom": { "type": "string" },
+                "prenoms": { "type": "string" },
+                "email": { "type": "string" }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Profil mis à jour" },
+          "401": { "description": "Non authentifié" },
+          "422": { "description": "Erreur de validation" }
+        }
+      }
+    },
+    "/auth/password": {
+      "put": {
+        "tags": ["Auth"],
+        "summary": "Mettre à jour le mot de passe",
+        "description": "Changer le mot de passe (requiert le mot de passe actuel)",
+        "operationId": "updatePassword",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": ["current_password", "password", "password_confirmation"],
+              "properties": {
+                "current_password": { "type": "string", "format": "password", "description": "Mot de passe actuel" },
+                "password": { "type": "string", "format": "password", "example": "nouveau123" },
+                "password_confirmation": { "type": "string", "format": "password", "example": "nouveau123" }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Mot de passe mis à jour" },
+          "401": { "description": "Non authentifié" },
+          "422": { "description": "Mot de passe actuel incorrect ou erreur de validation" }
+        }
+      },
+      "patch": {
+        "tags": ["Auth"],
+        "summary": "Mettre à jour le mot de passe",
+        "operationId": "updatePasswordPatch",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": ["current_password", "password", "password_confirmation"],
+              "properties": {
+                "current_password": { "type": "string", "format": "password" },
+                "password": { "type": "string", "format": "password" },
+                "password_confirmation": { "type": "string", "format": "password" }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Mot de passe mis à jour" },
+          "401": { "description": "Non authentifié" },
+          "422": { "description": "Erreur de validation" }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Déconnexion",
+        "description": "Invalider le token JWT",
+        "operationId": "logout",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Déconnexion réussie"
+          },
+          "401": {
+            "description": "Non authentifié"
+          }
+        }
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Rafraîchir le token",
+        "description": "Obtenir un nouveau token JWT. Envoyer le token actuel dans le header Authorization: Bearer {token}. Le nouveau token a la même durée de validité (ex. 24h).",
+        "operationId": "refresh",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Nouveau token émis",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": { "type": "string", "example": "Token rafraîchi avec succès" },
+                "token": { "type": "string" },
+                "token_type": { "type": "string", "example": "bearer" },
+                "expires_in": { "type": "integer", "description": "Durée de validité en secondes" },
+                "expires_at": { "type": "integer", "description": "Date d'expiration en millisecondes (timestamp Unix)" }
+              }
+            }
+          },
+          "401": {
+            "description": "Token absent, invalide ou expiré"
+          }
+        }
+      }
+    },
+    "/auth/villes": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Liste des villes",
+        "description": "Récupère la liste de toutes les villes (référentiel)",
+        "operationId": "villes",
+        "responses": {
+          "200": {
+            "description": "Liste des villes",
+            "schema": {
+              "type": "array",
+              "items": { "$ref": "#/definitions/Ville" }
+            }
+          }
+        }
+      }
+    },
+    "/auth/communes": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Liste des communes",
+        "description": "Récupère la liste de toutes les communes (référentiel)",
+        "operationId": "communes",
+        "responses": {
+          "200": {
+            "description": "Liste des communes",
+            "schema": {
+              "type": "array",
+              "items": { "$ref": "#/definitions/Commune" }
+            }
+          }
+        }
+      }
+    },
+    "/auth/type-de-prestations": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Liste des types de prestation",
+        "description": "Récupère la liste des types de prestation (référentiel)",
+        "operationId": "typeDePrestations",
+        "responses": {
+          "200": {
+            "description": "Liste des types de prestation",
+            "schema": {
+              "type": "array",
+              "items": { "$ref": "#/definitions/TypeDePrestation" }
+            }
+          }
+        }
+      }
+    },
+    "/auth/categorie-services": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Liste des catégories de service",
+        "description": "Récupère la liste des catégories de service actives (référentiel). Utiliser ces id pour categorie_service_id lors de la création/mise à jour d'un établissement.",
+        "operationId": "categorieServices",
+        "responses": {
+          "200": {
+            "description": "Liste des catégories de service",
+            "schema": {
+              "type": "array",
+              "items": { "$ref": "#/definitions/CategorieService" }
+            }
+          }
+        }
+      }
+    },
+    "/etablissements": {
+      "get": {
+        "tags": ["Etablissements"],
+        "summary": "Récupérer mon établissement",
+        "description": "Récupérer l'établissement du professionnel connecté",
+        "operationId": "getEtablissement",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Établissement trouvé",
+            "schema": { "$ref": "#/definitions/Etablissement" }
+          },
+          "401": { "description": "Non authentifié" },
+          "404": { "description": "Aucun établissement trouvé" }
+        }
+      },
+      "post": {
+        "tags": ["Etablissements"],
+        "summary": "Créer ou mettre à jour l'établissement",
+        "description": "Créer un nouvel établissement ou mettre à jour celui existant. Utiliser multipart/form-data pour envoyer les fichiers logo et cover.",
+        "operationId": "createOrUpdateEtablissement",
+        "consumes": ["multipart/form-data"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "name", "in": "formData", "required": true, "type": "string", "description": "Nom de l'établissement" },
+          { "name": "indicatif", "in": "formData", "type": "string", "default": "225" },
+          { "name": "mobile", "in": "formData", "type": "string" },
+          { "name": "mobile_fix", "in": "formData", "type": "string" },
+          { "name": "email", "in": "formData", "type": "string" },
+          { "name": "description", "in": "formData", "required": true, "type": "string" },
+          { "name": "logo", "in": "formData", "type": "file", "description": "Image logo (jpeg, png, gif, webp - max 5 Mo)" },
+          { "name": "cover", "in": "formData", "type": "file", "description": "Image cover (jpeg, png, gif, webp - max 5 Mo)" },
+          { "name": "logo_where_is_create", "in": "formData", "type": "integer", "enum": [0, 1] },
+          { "name": "cover_where_is_create", "in": "formData", "type": "integer", "enum": [0, 1] },
+          { "name": "adresse", "in": "formData", "required": true, "type": "string" },
+          { "name": "adresse_map", "in": "formData", "type": "string" },
+          { "name": "longitude", "in": "formData", "required": true, "type": "string" },
+          { "name": "latitude", "in": "formData", "required": true, "type": "string" },
+          { "name": "pays_id", "in": "formData", "required": true, "type": "integer" },
+          { "name": "ville_id", "in": "formData", "required": true, "type": "integer" },
+          { "name": "commune_id", "in": "formData", "required": true, "type": "integer" },
+          { "name": "specialite", "in": "formData", "type": "string" },
+          { "name": "type_etablissement_id", "in": "formData", "required": true, "type": "integer" },
+          { "name": "categorie_service_id", "in": "formData", "required": true, "type": "integer" },
+          { "name": "is_whatsapp", "in": "formData", "type": "integer", "enum": [0, 1] },
+          { "name": "type_de_prestations", "in": "formData", "required": true, "type": "array", "items": { "type": "integer" }, "collectionFormat": "multi", "description": "Renvoyer plusieurs fois type_de_prestations[]=2&type_de_prestations[]=3" },
+          { "name": "service_mobile", "in": "formData", "type": "integer", "enum": [0, 1] },
+          { "name": "cover_create_by", "in": "formData", "type": "integer", "enum": [1, 2] },
+          { "name": "logo_create_by", "in": "formData", "type": "integer", "enum": [1, 2] },
+          { "name": "statut", "in": "formData", "type": "integer", "enum": [0, 1] },
+          { "name": "code_parrain", "in": "formData", "type": "string" },
+          { "name": "is_commercial", "in": "formData", "type": "integer", "enum": [0, 1] }
+        ],
+        "responses": {
+          "200": { "description": "Établissement mis à jour" },
+          "201": { "description": "Établissement créé" },
+          "401": { "description": "Non authentifié" },
+          "422": { "description": "Erreur de validation" }
+        }
+      },
+      "put": {
+        "tags": ["Etablissements"],
+        "summary": "Créer ou mettre à jour l'établissement (PUT)",
+        "description": "Même endpoint que POST. Utiliser multipart/form-data pour les fichiers logo et cover.",
+        "operationId": "createOrUpdateEtablissementPut",
+        "consumes": ["multipart/form-data"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "name", "in": "formData", "required": true, "type": "string" },
+          { "name": "indicatif", "in": "formData", "type": "string" },
+          { "name": "mobile", "in": "formData", "type": "string" },
+          { "name": "mobile_fix", "in": "formData", "type": "string" },
+          { "name": "email", "in": "formData", "type": "string" },
+          { "name": "description", "in": "formData", "required": true, "type": "string" },
+          { "name": "logo", "in": "formData", "type": "file", "description": "Image logo - max 5 Mo" },
+          { "name": "cover", "in": "formData", "type": "file", "description": "Image cover - max 5 Mo" },
+          { "name": "logo_where_is_create", "in": "formData", "type": "integer", "enum": [0, 1] },
+          { "name": "cover_where_is_create", "in": "formData", "type": "integer", "enum": [0, 1] },
+          { "name": "adresse", "in": "formData", "required": true, "type": "string" },
+          { "name": "adresse_map", "in": "formData", "type": "string" },
+          { "name": "longitude", "in": "formData", "required": true, "type": "string" },
+          { "name": "latitude", "in": "formData", "required": true, "type": "string" },
+          { "name": "pays_id", "in": "formData", "required": true, "type": "integer" },
+          { "name": "ville_id", "in": "formData", "required": true, "type": "integer" },
+          { "name": "commune_id", "in": "formData", "required": true, "type": "integer" },
+          { "name": "specialite", "in": "formData", "type": "string" },
+          { "name": "type_etablissement_id", "in": "formData", "required": true, "type": "integer" },
+          { "name": "categorie_service_id", "in": "formData", "required": true, "type": "integer" },
+          { "name": "is_whatsapp", "in": "formData", "type": "integer", "enum": [0, 1] },
+          { "name": "type_de_prestations", "in": "formData", "required": true, "type": "array", "items": { "type": "integer" }, "collectionFormat": "multi" },
+          { "name": "service_mobile", "in": "formData", "type": "integer", "enum": [0, 1] },
+          { "name": "cover_create_by", "in": "formData", "type": "integer", "enum": [1, 2] },
+          { "name": "logo_create_by", "in": "formData", "type": "integer", "enum": [1, 2] },
+          { "name": "statut", "in": "formData", "type": "integer", "enum": [0, 1] },
+          { "name": "code_parrain", "in": "formData", "type": "string" },
+          { "name": "is_commercial", "in": "formData", "type": "integer", "enum": [0, 1] }
+        ],
+        "responses": {
+          "200": { "description": "Établissement mis à jour" },
+          "201": { "description": "Établissement créé" },
+          "401": { "description": "Non authentifié" },
+          "422": { "description": "Erreur de validation" }
+        }
+      }
+    },
+    "/etablissements/{id}/share-localisations": {
+      "get": {
+        "tags": ["Etablissements"],
+        "summary": "Partages de localisation",
+        "description": "Liste des partages de localisation pour un établissement",
+        "operationId": "shareLocalisations",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "type": "integer", "description": "ID de l'établissement" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Liste des partages de localisation",
+            "schema": {
+              "type": "array",
+              "items": { "$ref": "#/definitions/ShareLocalisation" }
+            }
+          },
+          "401": { "description": "Non authentifié" },
+          "404": { "description": "Établissement non trouvé" }
+        }
+      }
+    },
+    "/qrcodes": {
+      "get": {
+        "tags": ["QR Codes"],
+        "summary": "Historique des assignations",
+        "description": "Liste des assignations de QR codes du professionnel connecté",
+        "operationId": "listQrcodeAssignments",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "per_page",
+            "in": "query",
+            "type": "integer",
+            "description": "Nombre d'éléments par page (défaut: 15)"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "description": "Numéro de page"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Liste paginée des assignations",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "data": {
+                  "type": "array",
+                  "items": { "$ref": "#/definitions/QrcodeAssignment" }
+                },
+                "current_page": { "type": "integer" },
+                "per_page": { "type": "integer" },
+                "total": { "type": "integer" }
+              }
+            }
+          },
+          "401": { "description": "Non authentifié" }
+        }
+      }
+    },
+    "/qrcodes/assign-scan-lavage": {
+      "post": {
+        "tags": ["QR Codes"],
+        "summary": "Attribuer un QR code",
+        "description": "Attribuer un QR code à un véhicule lors d'un scan (par matricule)",
+        "operationId": "assignQrcodeByScan",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": ["qrcode", "matricule"],
+              "properties": {
+                "qrcode": { "type": "string", "description": "Valeur du QR code scanné" },
+                "matricule": { "type": "string", "description": "Matricule du véhicule" }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "QR code attribué avec succès",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": { "type": "string", "example": "success" },
+                "message": { "type": "string" },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "qrcode": { "type": "string" },
+                    "professionnel": { "type": "string" },
+                    "assigned_at": { "type": "string", "format": "date-time" },
+                    "vehicule": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Non authentifié" },
+          "404": { "description": "Véhicule ou QR code introuvable, ou établissement non trouvé" },
+          "409": { "description": "QR code déjà attribué" },
+          "422": { "description": "Erreur de validation" },
+          "500": { "description": "Erreur serveur" }
+        }
+      }
+    },
+    "/vidanges": {
+      "get": {
+        "tags": ["Vidanges"],
+        "summary": "Liste des alerts (vidanges)",
+        "description": "Liste des alerts vidanges de l'établissement du professionnel connecté",
+        "operationId": "listVidanges",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Liste des alerts",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": { "type": "boolean" },
+                "message": { "type": "string" },
+                "alerts": { "type": "array", "items": { "$ref": "#/definitions/Alert" } }
+              }
+            }
+          },
+          "401": { "description": "Non authentifié" },
+          "404": { "description": "Établissement non trouvé ou aucune alert" }
+        }
+      },
+      "post": {
+        "tags": ["Vidanges"],
+        "summary": "Enregistrer une vidange (alert)",
+        "description": "Créer une nouvelle alert vidange pour un véhicule",
+        "operationId": "storeVidange",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{
+          "name": "body",
+          "in": "body",
+          "required": true,
+          "schema": {
+            "type": "object",
+            "required": ["vehicule_id", "date_debut", "date_fin"],
+            "properties": {
+              "vehicule_id": { "type": "integer", "description": "ID du véhicule" },
+              "date_debut": { "type": "string", "format": "date" },
+              "date_fin": { "type": "string", "format": "date" },
+              "kilometrage": { "type": "string" },
+              "autres": { "type": "string", "description": "Autres infos (string ou JSON)" }
+            }
+          }
+        }],
+        "responses": {
+          "201": { "description": "Alert créée", "schema": { "type": "object", "properties": { "success": { "type": "boolean" }, "message": { "type": "string" }, "alert": { "$ref": "#/definitions/Alert" } } } },
+          "401": { "description": "Non authentifié" },
+          "404": { "description": "Établissement ou véhicule non trouvé" },
+          "422": { "description": "Erreur de validation" },
+          "500": { "description": "Erreur serveur" }
+        }
+      }
+    },
+    "/vidanges/last-by-matricule": {
+      "get": {
+        "tags": ["Vidanges"],
+        "summary": "Dernière vidange par matricule",
+        "description": "Récupère la dernière vidange (alert) d'un véhicule par son matricule",
+        "operationId": "getLastVidangeByMatricule",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "matricule", "in": "query", "required": true, "type": "string", "description": "Matricule du véhicule" }
+        ],
+        "responses": {
+          "200": { "description": "Dernière vidange trouvée", "schema": { "type": "object", "properties": { "success": { "type": "boolean" }, "message": { "type": "string" }, "vidange": { "$ref": "#/definitions/Alert" } } } },
+          "401": { "description": "Non authentifié" },
+          "404": { "description": "Établissement, véhicule ou vidange non trouvé" },
+          "422": { "description": "Validation échouée (matricule requis)" }
+        }
+      }
+    },
+    "/vidanges/vehicule-by-matricule": {
+      "get": {
+        "tags": ["Vidanges"],
+        "summary": "Véhicule par matricule",
+        "description": "Récupère un véhicule par son matricule",
+        "operationId": "getVehiculeByMatricule",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "matricule", "in": "query", "required": true, "type": "string", "description": "Matricule du véhicule" }
+        ],
+        "responses": {
+          "200": { "description": "Véhicule trouvé", "schema": { "type": "object", "properties": { "success": { "type": "boolean" }, "message": { "type": "string" }, "vehicule": { "type": "object" } } } },
+          "401": { "description": "Non authentifié" },
+          "404": { "description": "Établissement ou véhicule non trouvé" },
+          "422": { "description": "Validation échouée (matricule requis)" },
+          "500": { "description": "Erreur serveur" }
+        }
+      }
+    },
+    "/usagers": {
+      "get": {
+        "tags": ["Usagers"],
+        "summary": "Liste des usagers",
+        "description": "Liste des usagers créés par l'établissement du professionnel connecté",
+        "operationId": "listUsagers",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "per_page",
+            "in": "query",
+            "type": "integer",
+            "description": "Nombre d'éléments par page (défaut: 15)"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "description": "Numéro de page"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Liste paginée des usagers",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "data": {
+                  "type": "array",
+                  "items": { "$ref": "#/definitions/Usager" }
+                }
+              }
+            }
+          },
+          "401": { "description": "Non authentifié" },
+          "404": { "description": "Établissement non trouvé" }
+        }
+      },
+      "post": {
+        "tags": ["Usagers"],
+        "summary": "Enregistrer un usager",
+        "description": "Créer un nouveau compte usager et son véhicule (mot de passe généré et envoyé par SMS). Utiliser multipart/form-data pour envoyer les photos du véhicule.",
+        "operationId": "registerUsager",
+        "consumes": ["multipart/form-data"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "indicatif", "in": "formData", "required": true, "type": "string", "description": "Indicatif téléphonique", "example": "225" },
+          { "name": "nom", "in": "formData", "required": true, "type": "string", "description": "Nom de l'usager", "example": "Dupont" },
+          { "name": "prenoms", "in": "formData", "required": true, "type": "string", "description": "Prénoms de l'usager", "example": "Jean" },
+          { "name": "mobile", "in": "formData", "required": true, "type": "string", "description": "Numéro mobile (unique)", "example": "0700000000" },
+          { "name": "is_whatsapp", "in": "formData", "required": true, "type": "integer", "enum": [0, 1], "description": "0=non, 1=oui" },
+          { "name": "matricule", "in": "formData", "required": true, "type": "string", "description": "Matricule du véhicule (unique)" },
+          { "name": "carte_grise", "in": "formData", "required": true, "type": "string", "description": "Numéro carte grise (unique)" },
+          { "name": "photos[]", "in": "formData", "required": false, "type": "file", "description": "Photos du véhicule (4 images max, 2 Mo chacune). Envoyer photos[0] à photos[3]." },
+          { "name": "type_de_vehicule_id", "in": "formData", "required": true, "type": "integer", "description": "ID type véhicule (voir /usagers/type-de-vehicules)" },
+          { "name": "marque_id", "in": "formData", "required": true, "type": "integer", "description": "ID marque (voir /usagers/marques)" },
+          { "name": "type_de_carburant_id", "in": "formData", "required": true, "type": "integer", "description": "ID type carburant (voir /usagers/type-de-carburants)" },
+          { "name": "couleur", "in": "formData", "required": true, "type": "string", "maxLength": 50 },
+          { "name": "modele", "in": "formData", "required": true, "type": "string", "description": "Modèle du véhicule" }
+        ],
+        "responses": {
+          "201": {
+            "description": "Usager et véhicule enregistrés avec succès",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": { "type": "boolean" },
+                "message": { "type": "string" },
+                "user": { "$ref": "#/definitions/Usager" },
+                "vehicule": { "$ref": "#/definitions/Vehicule" }
+              }
+            }
+          },
+          "401": { "description": "Non authentifié ou établissement non trouvé" },
+          "422": { "description": "Validation échouée (ex: mobile/matricule/carte_grise déjà utilisés)" },
+          "500": { "description": "Erreur serveur" }
+        }
+      }
+    },
+    "/usagers/marques": {
+      "get": {
+        "tags": ["Usagers"],
+        "summary": "Liste des marques",
+        "description": "Récupère la liste des marques (référentiel)",
+        "operationId": "marques",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Liste des marques", "schema": { "type": "array", "items": { "$ref": "#/definitions/Marque" } } },
+          "401": { "description": "Non authentifié" }
+        }
+      }
+    },
+    "/usagers/type-de-carburants": {
+      "get": {
+        "tags": ["Usagers"],
+        "summary": "Liste des types de carburant",
+        "description": "Récupère la liste des types de carburant (référentiel)",
+        "operationId": "typeDeCarburants",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Liste des types de carburant", "schema": { "type": "array", "items": { "$ref": "#/definitions/TypeDeCarburant" } } },
+          "401": { "description": "Non authentifié" }
+        }
+      }
+    },
+    "/usagers/type-de-vehicules": {
+      "get": {
+        "tags": ["Usagers"],
+        "summary": "Liste des types de véhicule",
+        "description": "Récupère la liste des types de véhicule (référentiel)",
+        "operationId": "typeDeVehicules",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Liste des types de véhicule", "schema": { "type": "array", "items": { "$ref": "#/definitions/TypeDeVehicule" } } },
+          "401": { "description": "Non authentifié" }
+        }
+      }
+    },
+    "/usagers/type-alerts": {
+      "get": {
+        "tags": ["Usagers"],
+        "summary": "Liste des types d'alerte",
+        "description": "Récupère la liste des types d'alerte (référentiel)",
+        "operationId": "typeAlerts",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Liste des types d'alerte", "schema": { "type": "array", "items": { "$ref": "#/definitions/TypeAlert" } } },
+          "401": { "description": "Non authentifié" }
+        }
+      }
+    },
+    "/annonces": {
+      "get": {
+        "tags": ["Annonces"],
+        "summary": "Liste des annonces",
+        "description": "Liste des annonces (usagers) visibles pour l'établissement du professionnel connecté. Exclut les annonces masquées (is_visible=false) via annonce_etablissements.",
+        "operationId": "listAnnonces",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "per_page",
+            "in": "query",
+            "type": "integer",
+            "description": "Nombre d'éléments par page (défaut: 15)"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "description": "Numéro de page"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Liste paginée des annonces",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "data": {
+                  "type": "array",
+                  "items": { "$ref": "#/definitions/Annonce" }
+                },
+                "current_page": { "type": "integer" },
+                "last_page": { "type": "integer" },
+                "per_page": { "type": "integer" },
+                "total": { "type": "integer" }
+              }
+            }
+          },
+          "401": { "description": "Non authentifié" },
+          "404": { "description": "Établissement non trouvé" }
+        }
+      }
+    },
+    "/annonces/hide": {
+      "post": {
+        "tags": ["Annonces"],
+        "summary": "Masquer une annonce",
+        "description": "Masquer une annonce pour l'établissement du professionnel connecté. Crée ou met à jour la ligne dans annonce_etablissements avec is_visible=false.",
+        "operationId": "hideAnnonce",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": ["annonce_id"],
+              "properties": {
+                "annonce_id": { "type": "integer", "description": "ID de l'annonce à masquer" }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Annonce masquée avec succès",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": { "type": "boolean" },
+                "message": { "type": "string" }
+              }
+            }
+          },
+          "401": { "description": "Non authentifié" },
+          "404": { "description": "Établissement non trouvé" },
+          "422": { "description": "Erreur de validation (annonce_id requis ou introuvable)" }
+        }
+      }
+    },
+    "/articles": {
+      "get": {
+        "tags": ["Articles"],
+        "summary": "Liste des articles",
+        "description": "Liste des articles de l'établissement du professionnel connecté",
+        "operationId": "listArticles",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "per_page", "in": "query", "type": "integer", "description": "Éléments par page (défaut: 15)" },
+          { "name": "page", "in": "query", "type": "integer", "description": "Numéro de page" }
+        ],
+        "responses": {
+          "200": { "description": "Liste paginée des articles", "schema": { "type": "object", "properties": { "data": { "type": "array", "items": { "$ref": "#/definitions/Article" } }, "current_page": { "type": "integer" }, "last_page": { "type": "integer" }, "per_page": { "type": "integer" }, "total": { "type": "integer" } } } },
+          "401": { "description": "Non authentifié" },
+          "404": { "description": "Établissement non trouvé" }
+        }
+      },
+      "post": {
+        "tags": ["Articles"],
+        "summary": "Créer un article",
+        "operationId": "createArticle",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{
+          "name": "body",
+          "in": "body",
+          "required": true,
+          "schema": {
+            "type": "object",
+            "required": ["libelle", "description", "image"],
+            "properties": {
+              "libelle": { "type": "string", "maxLength": 255 },
+              "description": { "type": "string" },
+              "image": { "type": "string", "maxLength": 255 },
+              "amount": { "type": "string", "maxLength": 255 },
+              "gestionnaire_de_flotte_id": { "type": "integer" }
+            }
+          }
+        }],
+        "responses": {
+          "201": { "description": "Article créé", "schema": { "$ref": "#/definitions/Article" } },
+          "401": { "description": "Non authentifié" },
+          "404": { "description": "Établissement non trouvé" },
+          "422": { "description": "Erreur de validation" }
+        }
+      }
+    },
+    "/articles/{id}": {
+      "get": {
+        "tags": ["Articles"],
+        "summary": "Détail d'un article",
+        "operationId": "showArticle",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "type": "integer" }],
+        "responses": {
+          "200": { "description": "Article", "schema": { "$ref": "#/definitions/Article" } },
+          "401": { "description": "Non authentifié" },
+          "404": { "description": "Établissement ou article introuvable" }
+        }
+      },
+      "put": {
+        "tags": ["Articles"],
+        "summary": "Mettre à jour un article",
+        "operationId": "updateArticle",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "type": "integer" },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "libelle": { "type": "string", "maxLength": 255 },
+                "description": { "type": "string" },
+                "image": { "type": "string", "maxLength": 255 },
+                "amount": { "type": "string", "maxLength": 255 },
+                "gestionnaire_de_flotte_id": { "type": "integer" }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Article mis à jour", "schema": { "$ref": "#/definitions/Article" } },
+          "401": { "description": "Non authentifié" },
+          "404": { "description": "Établissement ou article introuvable" },
+          "422": { "description": "Erreur de validation" }
+        }
+      },
+      "patch": {
+        "tags": ["Articles"],
+        "summary": "Mettre à jour un article (partiel)",
+        "operationId": "patchArticle",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "type": "integer" },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "libelle": { "type": "string", "maxLength": 255 },
+                "description": { "type": "string" },
+                "image": { "type": "string", "maxLength": 255 },
+                "amount": { "type": "string", "maxLength": 255 },
+                "gestionnaire_de_flotte_id": { "type": "integer" }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Article mis à jour", "schema": { "$ref": "#/definitions/Article" } },
+          "401": { "description": "Non authentifié" },
+          "404": { "description": "Établissement ou article introuvable" },
+          "422": { "description": "Erreur de validation" }
+        }
+      },
+      "delete": {
+        "tags": ["Articles"],
+        "summary": "Supprimer un article",
+        "operationId": "deleteArticle",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "type": "integer" }],
+        "responses": {
+          "200": { "description": "Article supprimé", "schema": { "type": "object", "properties": { "success": { "type": "boolean" }, "message": { "type": "string" } } } },
+          "401": { "description": "Non authentifié" },
+          "404": { "description": "Établissement ou article introuvable" }
+        }
+      }
+    },
+    "/abonnements": {
+      "get": {
+        "tags": ["Abonnements"],
+        "summary": "Historique des abonnements",
+        "description": "Liste des abonnements (historique) de l'établissement du professionnel connecté, avec le forfait associé.",
+        "operationId": "listAbonnements",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "per_page", "in": "query", "type": "integer", "description": "Éléments par page (défaut: 15)" },
+          { "name": "page", "in": "query", "type": "integer", "description": "Numéro de page" }
+        ],
+        "responses": {
+          "200": { "description": "Liste paginée des abonnements avec forfait_pro", "schema": { "type": "object", "properties": { "data": { "type": "array", "items": { "$ref": "#/definitions/AbonnementPro" } }, "current_page": { "type": "integer" }, "last_page": { "type": "integer" }, "per_page": { "type": "integer" }, "total": { "type": "integer" } } } },
+          "401": { "description": "Non authentifié" },
+          "404": { "description": "Établissement non trouvé" }
+        }
+      }
+    },
+    "/forfaits": {
+      "get": {
+        "tags": ["Forfaits"],
+        "summary": "Liste des forfaits",
+        "description": "Liste des forfaits pro (plans d'abonnement). Optionnel : filtrer par statut (query statut=0 ou 1).",
+        "operationId": "listForfaits",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "per_page", "in": "query", "type": "integer", "description": "Éléments par page (défaut: 15)" },
+          { "name": "page", "in": "query", "type": "integer", "description": "Numéro de page" },
+          { "name": "statut", "in": "query", "type": "integer", "enum": [0, 1], "description": "Filtrer par statut (0=inactif, 1=actif)" }
+        ],
+        "responses": {
+          "200": { "description": "Liste paginée des forfaits", "schema": { "type": "object", "properties": { "data": { "type": "array", "items": { "$ref": "#/definitions/ForfaitPro" } }, "current_page": { "type": "integer" }, "last_page": { "type": "integer" }, "per_page": { "type": "integer" }, "total": { "type": "integer" } } } },
+          "401": { "description": "Non authentifié" }
+        }
+      }
+    },
+    "/promotions": {
+      "get": {
+        "tags": ["Promotions"],
+        "summary": "Liste des promotions",
+        "description": "Liste des promotions de l'établissement du professionnel connecté",
+        "operationId": "listPromotions",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "per_page", "in": "query", "type": "integer", "description": "Éléments par page (défaut: 15)" },
+          { "name": "page", "in": "query", "type": "integer", "description": "Numéro de page" }
+        ],
+        "responses": {
+          "200": { "description": "Liste paginée des promotions", "schema": { "type": "object", "properties": { "data": { "type": "array", "items": { "$ref": "#/definitions/Promotion" } }, "current_page": { "type": "integer" }, "last_page": { "type": "integer" }, "per_page": { "type": "integer" }, "total": { "type": "integer" } } } },
+          "401": { "description": "Non authentifié" },
+          "404": { "description": "Établissement non trouvé" }
+        }
+      },
+      "post": {
+        "tags": ["Promotions"],
+        "summary": "Créer une promotion",
+        "operationId": "createPromotion",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{
+          "name": "body",
+          "in": "body",
+          "required": true,
+          "schema": {
+            "type": "object",
+            "required": ["libelle", "mobile", "date_debut", "date_fin", "image"],
+            "properties": {
+              "libelle": { "type": "string", "maxLength": 200 },
+              "mobile": { "type": "string", "maxLength": 20 },
+              "date_debut": { "type": "string", "format": "date" },
+              "date_fin": { "type": "string", "format": "date" },
+              "image": { "type": "string", "maxLength": 100 },
+              "statut": { "type": "integer", "enum": [0, 1], "description": "0=inactif, 1=actif" },
+              "description": { "type": "string" }
+            }
+          }
+        }],
+        "responses": {
+          "201": { "description": "Promotion créée", "schema": { "$ref": "#/definitions/Promotion" } },
+          "401": { "description": "Non authentifié" },
+          "404": { "description": "Établissement non trouvé" },
+          "422": { "description": "Erreur de validation" }
+        }
+      }
+    },
+    "/promotions/{id}": {
+      "get": {
+        "tags": ["Promotions"],
+        "summary": "Détail d'une promotion",
+        "operationId": "showPromotion",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "type": "integer" }],
+        "responses": {
+          "200": { "description": "Promotion", "schema": { "$ref": "#/definitions/Promotion" } },
+          "401": { "description": "Non authentifié" },
+          "404": { "description": "Établissement ou promotion introuvable" }
+        }
+      },
+      "put": {
+        "tags": ["Promotions"],
+        "summary": "Mettre à jour une promotion",
+        "operationId": "updatePromotion",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "type": "integer" },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "libelle": { "type": "string", "maxLength": 200 },
+                "mobile": { "type": "string", "maxLength": 20 },
+                "date_debut": { "type": "string", "format": "date" },
+                "date_fin": { "type": "string", "format": "date" },
+                "image": { "type": "string", "maxLength": 100 },
+                "statut": { "type": "integer", "enum": [0, 1] },
+                "description": { "type": "string" }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Promotion mise à jour", "schema": { "$ref": "#/definitions/Promotion" } },
+          "401": { "description": "Non authentifié" },
+          "404": { "description": "Établissement ou promotion introuvable" },
+          "422": { "description": "Erreur de validation" }
+        }
+      },
+      "patch": {
+        "tags": ["Promotions"],
+        "summary": "Mettre à jour une promotion (partiel)",
+        "operationId": "patchPromotion",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "type": "integer" },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "libelle": { "type": "string", "maxLength": 200 },
+                "mobile": { "type": "string", "maxLength": 20 },
+                "date_debut": { "type": "string", "format": "date" },
+                "date_fin": { "type": "string", "format": "date" },
+                "image": { "type": "string", "maxLength": 100 },
+                "statut": { "type": "integer", "enum": [0, 1] },
+                "description": { "type": "string" }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Promotion mise à jour", "schema": { "$ref": "#/definitions/Promotion" } },
+          "401": { "description": "Non authentifié" },
+          "404": { "description": "Établissement ou promotion introuvable" },
+          "422": { "description": "Erreur de validation" }
+        }
+      },
+      "delete": {
+        "tags": ["Promotions"],
+        "summary": "Supprimer une promotion",
+        "operationId": "deletePromotion",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "type": "integer" }],
+        "responses": {
+          "200": { "description": "Promotion supprimée", "schema": { "type": "object", "properties": { "success": { "type": "boolean" }, "message": { "type": "string" } } } },
+          "401": { "description": "Non authentifié" },
+          "404": { "description": "Établissement ou promotion introuvable" }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Professionnel": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "integer", "example": 1 },
+        "nom": { "type": "string", "example": "Dupont" },
+        "prenoms": { "type": "string", "example": "Jean" },
+        "role": { "type": "string", "example": "01" },
+        "mobile": { "type": "string", "example": "0700000000" },
+        "email": { "type": "string", "example": "jean@example.com" }
+      }
+    },
+    "AuthResponse": {
+      "type": "object",
+      "properties": {
+        "message": { "type": "string" },
+        "professionnel": { "$ref": "#/definitions/Professionnel" },
+        "token": { "type": "string" },
+        "token_type": { "type": "string", "example": "bearer" },
+        "expires_in": { "type": "integer", "description": "Durée de validité du token en secondes (ex. 86400 pour 24h)" },
+        "expires_at": { "type": "integer", "description": "Date d'expiration du token en millisecondes (timestamp Unix)" }
+      }
+    },
+    "ShareLocalisation": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "integer" },
+        "etablissement_id": { "type": "integer" },
+        "created_at": { "type": "string", "format": "date-time" },
+        "updated_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "Etablissement": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "integer" },
+        "name": { "type": "string" },
+        "indicatif": { "type": "string" },
+        "mobile": { "type": "string" },
+        "mobile_fix": { "type": "string" },
+        "email": { "type": "string" },
+        "description": { "type": "string" },
+        "adresse": { "type": "string" },
+        "longitude": { "type": "string" },
+        "latitude": { "type": "string" },
+        "professionnel_id": { "type": "integer" },
+        "pays_id": { "type": "integer" },
+        "ville_id": { "type": "integer" },
+        "commune_id": { "type": "integer" },
+        "specialite": { "type": "string" },
+        "type_etablissement_id": { "type": "integer" },
+        "categorie_service_id": { "type": "integer" }
+      }
+    },
+    "EtablissementInput": {
+      "type": "object",
+      "required": ["name", "description", "adresse", "longitude", "latitude", "pays_id", "ville_id", "commune_id", "type_etablissement_id", "categorie_service_id", "type_de_prestations"],
+      "properties": {
+        "name": { "type": "string" },
+        "indicatif": { "type": "string", "example": "225" },
+        "mobile": { "type": "string" },
+        "mobile_fix": { "type": "string" },
+        "email": { "type": "string" },
+        "description": { "type": "string" },
+        "adresse": { "type": "string" },
+        "adresse_map": { "type": "string" },
+        "longitude": { "type": "string" },
+        "latitude": { "type": "string" },
+        "pays_id": { "type": "integer" },
+        "ville_id": { "type": "integer" },
+        "commune_id": { "type": "integer" },
+        "specialite": { "type": "string" },
+        "type_etablissement_id": { "type": "integer" },
+        "categorie_service_id": { "type": "integer" },
+        "type_de_prestations": { "type": "array", "items": { "type": "integer" } }
+      }
+    },
+    "QrcodeAssignment": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "integer" },
+        "qrcode_id": { "type": "integer" },
+        "professionnel_id": { "type": "integer" },
+        "etablissement_id": { "type": "integer" },
+        "user_id": { "type": "integer" },
+        "assigned_at": { "type": "string", "format": "date-time" },
+        "qrcode_generate": { "$ref": "#/definitions/QrcodeGenerate" }
+      }
+    },
+    "QrcodeGenerate": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "integer" },
+        "qrcode": { "type": "string" },
+        "is_assigned": { "type": "boolean" },
+        "assigned_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "Alert": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "integer" },
+        "etablissement_id": { "type": "integer" },
+        "vehicule_id": { "type": "integer" },
+        "type_alert_id": { "type": "integer" },
+        "user_id": { "type": "integer" },
+        "message": { "type": "string" },
+        "statut": { "type": "integer" },
+        "date_debut": { "type": "string", "format": "date" },
+        "date_fin": { "type": "string", "format": "date" },
+        "kilometrage": { "type": "string" },
+        "autres": { "type": "string" },
+        "created_at": { "type": "string", "format": "date-time" },
+        "updated_at": { "type": "string", "format": "date-time" },
+        "vehicule": { "type": "object" },
+        "typeAlert": { "type": "object" }
+      }
+    },
+    "Marque": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "integer" },
+        "libelle": { "type": "string" }
+      }
+    },
+    "TypeDeCarburant": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "integer" },
+        "libelle": { "type": "string" }
+      }
+    },
+    "TypeDeVehicule": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "integer" },
+        "libelle": { "type": "string" }
+      }
+    },
+    "TypeAlert": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "integer" },
+        "libelle": { "type": "string" }
+      }
+    },
+    "Usager": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "integer" },
+        "uuid": { "type": "string" },
+        "nom": { "type": "string" },
+        "prenoms": { "type": "string" },
+        "indicatif": { "type": "string" },
+        "mobile": { "type": "string" },
+        "email": { "type": "string" },
+        "is_whatsapp": { "type": "integer" },
+        "etablissement_id": { "type": "integer" },
+        "professionnel_id": { "type": "integer" }
+      }
+    },
+    "Vehicule": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "integer" },
+        "matricule": { "type": "string" },
+        "carte_grise": { "type": "string" },
+        "type_de_vehicule_id": { "type": "integer" },
+        "marque_id": { "type": "integer" },
+        "type_de_carburant_id": { "type": "integer" },
+        "couleur": { "type": "string" },
+        "modele": { "type": "string" },
+        "user_id": { "type": "integer" },
+        "photos": { "type": "string", "description": "Chemins des photos (JSON)" }
+      }
+    },
+    "Parrain": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "integer" },
+        "code": { "type": "string" }
+      }
+    },
+    "Annonce": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "integer" },
+        "libelle": { "type": "string" },
+        "image": { "type": "string" },
+        "description": { "type": "string" },
+        "type_etablissement_id": { "type": "integer" },
+        "type_de_piece_id": { "type": "integer" },
+        "marque_id": { "type": "integer" },
+        "modele": { "type": "string" },
+        "statut": { "type": "integer" },
+        "mobile": { "type": "string" },
+        "is_whatsapp": { "type": "integer" },
+        "categorie_piece_id": { "type": "integer" },
+        "sous_categorie_piece_id": { "type": "integer" },
+        "created_at": { "type": "string", "format": "date-time" },
+        "updated_at": { "type": "string", "format": "date-time" },
+        "usager": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "integer" },
+            "uuid": { "type": "string" },
+            "nom": { "type": "string" },
+            "prenoms": { "type": "string" },
+            "mobile": { "type": "string" },
+            "indicatif": { "type": "string" }
+          }
+        }
+      }
+    },
+    "Article": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "integer" },
+        "libelle": { "type": "string" },
+        "description": { "type": "string" },
+        "image": { "type": "string" },
+        "amount": { "type": "string" },
+        "etablissement_id": { "type": "integer" },
+        "created_by": { "type": "integer" },
+        "gestionnaire_de_flotte_id": { "type": "integer" },
+        "created_at": { "type": "string", "format": "date-time" },
+        "updated_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "Promotion": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "integer" },
+        "libelle": { "type": "string" },
+        "mobile": { "type": "string" },
+        "date_debut": { "type": "string", "format": "date" },
+        "date_fin": { "type": "string", "format": "date" },
+        "image": { "type": "string" },
+        "statut": { "type": "integer" },
+        "description": { "type": "string" },
+        "etablissement_id": { "type": "integer" },
+        "created_by": { "type": "integer" },
+        "created_at": { "type": "string", "format": "date-time" },
+        "updated_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "ForfaitPro": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "integer" },
+        "nom": { "type": "string" },
+        "duree": { "type": "integer" },
+        "prix": { "type": "integer" },
+        "avantages": { "type": "string" },
+        "statut": { "type": "integer" }
+      }
+    },
+    "AbonnementPro": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "integer" },
+        "etablissement_id": { "type": "integer" },
+        "forfait_pro_id": { "type": "integer" },
+        "date_debut": { "type": "string", "format": "date" },
+        "date_fin": { "type": "string", "format": "date" },
+        "created_at": { "type": "string", "format": "date-time" },
+        "updated_at": { "type": "string", "format": "date-time" },
+        "forfait_pro": { "$ref": "#/definitions/ForfaitPro" }
+      }
+    },
+    "Ville": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "integer" },
+        "libelle": { "type": "string" },
+        "pays_id": { "type": "integer" }
+      }
+    },
+    "Commune": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "integer" },
+        "nom": { "type": "string" },
+        "ville_id": { "type": "integer" }
+      }
+    },
+    "TypeDePrestation": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "integer" },
+        "libelle": { "type": "string" },
+        "image": { "type": "string" }
+      }
+    },
+    "CategorieService": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "integer" },
+        "libelle": { "type": "string" },
+        "image": { "type": "string" },
+        "description": { "type": "string" },
+        "statut": { "type": "integer" },
+        "pro_or_usager": { "type": "integer" },
+        "is_pro": { "type": "integer" }
+      }
+    }
+  }
+}
