@@ -240,6 +240,24 @@ class AuthController extends Controller
     }
 
     /**
+     * Enregistrer le token FCM du professionnel connecté.
+     */
+    public function updateFcmToken(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'fcm_token' => 'required|string|max:4096',
+        ]);
+
+        $professionnel = auth('professionnels')->user();
+        $professionnel->fcm_token = $validated['fcm_token'];
+        $professionnel->save();
+
+        return response()->json([
+            'message' => 'Token FCM enregistré avec succès.',
+        ]);
+    }
+
+    /**
      * Déconnexion
      */
     public function logout(): JsonResponse

@@ -29,6 +29,7 @@ Route::post('update-etablissement-medias/{id}', [EtablissementController::class,
         Route::patch('me', [AuthController::class, 'update']);
         Route::put('password', [AuthController::class, 'updatePassword']);
         Route::patch('password', [AuthController::class, 'updatePassword']);
+        Route::put('fcm-token', [AuthController::class, 'updateFcmToken']);
         Route::post('logout', [AuthController::class, 'logout']);
         // Rafraîchir le token : POST /api/auth/refresh avec header Authorization: Bearer {token}
         Route::post('refresh', [AuthController::class, 'refresh']);

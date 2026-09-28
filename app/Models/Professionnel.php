@@ -21,11 +21,13 @@ class Professionnel extends Authenticatable implements JWTSubject
         'mobile',
         'password',
         'created_by',
+        'fcm_token',
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
+        'fcm_token',
     ];
 
     protected function casts(): array
